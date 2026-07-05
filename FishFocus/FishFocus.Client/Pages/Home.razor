@@ -24,21 +24,22 @@
 })" />
 <PageTitle>Рыбалка</PageTitle>
 
+
 <div class="main-container @(isNightMode ? "night-theme" : "day-theme")"
      style="opacity: @(_isAppReady ? "1" : "0"); transition: opacity 0.8s ease-in-out;">
 
-    <div class="lake-area" id="lake-container"> 
-        @if (isRainInDom) 
+    <div class="lake-area" id="lake-container">
+        @if (isRainInDom)
         {
             <div class="rain-overlay @(isRainAnimationActive ? "rain-active" : "")" @key="@("rain-layer-v6")">
                 @if (_rainDrops != null)
                 {
                     @foreach (var drop in _rainDrops)
                     {
-                        <div class="rain-drop" 
-                             style="left: @(drop.Left.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))%; 
-                                    animation-delay: @(drop.Delay.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))s; 
-                                    animation-duration: @(drop.Duration.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))s;">
+                        <div class="rain-drop"
+                             style="left: @(drop.Left.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))%;
+                            animation-delay: @(drop.Delay.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))s;
+                            animation-duration: @(drop.Duration.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))s;">
                         </div>
                     }
                 }
@@ -49,22 +50,22 @@
             <div class="clouds-visual-area">
                 @foreach (var cloud in _activeClouds)
                 {
-                    <div class="cloud @cloud.Class @cloud.DirectionClass" 
-                         style="top: @(cloud.Top)%; 
-                                animation-duration: @(cloud.Duration)s; 
-                                animation-delay: @(cloud.NegDelay.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))s;">
+                    <div class="cloud @cloud.Class @cloud.DirectionClass"
+                         style="top: @(cloud.Top)%;
+                        animation-duration: @(cloud.Duration)s;
+                        animation-delay: @(cloud.NegDelay.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))s;">
                     </div>
                 }
             </div>
-            
+
             <div class="lightning-flash @(isLightningStrike ? "flash-active" : "")"></div>
-            
+
             @if (_isAppReady)
             {
                 <div class="birds-visual-area">
                     @foreach (var bird in _activeBirds)
                     {
-                        <div class="bird-container @(bird.IsFlyingRight ? "fly-right" : "fly-left")" 
+                        <div class="bird-container @(bird.IsFlyingRight ? "fly-right" : "fly-left")"
                              style="top: @(bird.Top)%; animation-duration: @(bird.Speed.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))s; animation-delay: @(bird.Delay.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))s;"
                              @key="bird.Id">
                             <div class="bird @bird.BirdClass"></div>
@@ -76,8 +77,8 @@
             <div class="lightning-container">
                 @foreach (var bolt in _activeBolts)
                 {
-                    <svg class="lightning-bolt" 
-                         style="left: @(bolt.Left)%; top: @(bolt.Top)%; width: @(bolt.Width)px; height: @(bolt.Height)px;" 
+                    <svg class="lightning-bolt"
+                         style="left: @(bolt.Left)%; top: @(bolt.Top)%; width: @(bolt.Width)px; height: @(bolt.Height)px;"
                          viewBox="0 0 20 40" @key="bolt.Id">
                         <path d="M10 0 L2 20 L18 15 L8 40" fill="none" stroke="white" stroke-width="2" />
                     </svg>
@@ -85,42 +86,44 @@
             </div>
         </div>
 
-        <div class="water-part">
-            <div class="water-click-zone" @onclick="HandleLakeClick" @onclick:stopPropagation></div>
-                                <div class="fog-overlay @(playFog ? "fog-active" : "")"></div>
+        <div class="water-part" @onclick="HandleLakeClick" @onmousemove="HandleMouseMove" @onclick:stopPropagation>
+            <div class="fog-overlay @(playFog ? "fog-active" : "")"></div>
 
             <div class="fishing-ui-group">
-                <div class="progress-container">
-                    <MudProgressCircular Value="@_progressValue" 
-                                         Size="Size.Large" 
-                                         Thickness="2" 
-                                         Class="main-progress-circle" 
-                                         Style="height:150px; width:150px;">
-                        <ChildContent>
-                             @if (isRunning)
-                             {
-                                <div class="fishing-scene">
-                                    <div class="water-line"></div>
-                                    <div class="bobber @GetFishingAnimationClass()">
-                                        <div class="bobber-top"></div>
-                                    </div>
-                                    <div class="ripples"></div>
-                                    <div class="splash-effect @(showSplash ? "splash-active" : "")"></div>
-                                </div>
-                             }
-                        </ChildContent>
-                    </MudProgressCircular>
+                <div class="fishing-visual-layer">
+                    <div class="progress-container">
+                        <MudProgressCircular Value="@_progressValue"
+                                             Size="Size.Large"
+                                             Thickness="2"
+                                             Class="main-progress-circle"
+                                             Style="height:150px; width:150px;">
+                        </MudProgressCircular>
                     </div>
+
+                    <div class="fishing-scene @(GetContainerAnimationClass())">
+                        <svg class="bobber-svg @(GetFishingAnimationClass()) @(GetFinalShakeClass())" viewBox="0 0 50 100" style="width: 50px; height: 100px;">
+                            <line x1="25" y1="15" x2="25" y2="45" stroke="#ff3b30" stroke-width="3" stroke-linecap="round" />
+                            <line x1="25" y1="28" x2="25" y2="40" stroke="#ffffff" stroke-width="3" />
+                            <circle cx="25" cy="15" r="4.5" fill="#ffcc00" stroke="#1a252f" stroke-width="2" />
+                            <path d="M 25 45 C 38 45, 40 65, 25 90 C 10 65, 12 45, 25 45 Z" fill="#2ecc71" stroke="#1a252f" stroke-width="2.5" />
+                            <path d="M 15.5 54 C 18 48, 21 45, 25 45 C 29 45, 32 48, 34.5 54 Z" fill="#ff3b30" stroke="#1a252f" stroke-width="2" />
+                            <line x1="25" y1="90" x2="25" y2="98" stroke="#1a252f" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+
+                        <div class="ripples"></div>
+                        <div class="splash-effect @(showSplash ? "splash-active" : "")"></div>
+                    </div>
+                </div>
 
                 <MudText Typo="Typo.h1" Class="timer-text">@timeDisplay</MudText>
 
                 <div class="quote-area">
                     <MudText Typo="Typo.body1" Class="italic-quote">"@_currentQuote"</MudText>
                 </div>
-                
+
                 @if (_isAppReady)
                 {
-                    @if (!isRunning)
+                    if (!isRunning && !_isLeaving)
                     {
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" OnClick="StartTimer" Class="action-button">
                             Забросить удочку
@@ -136,10 +139,8 @@
             </div>
         </div>
     </div>
-
     <div class="settings-panel">
         <div class="d-flex justify-space-between align-center mb-2">
-            <MudText Typo="Typo.h6">Настройки</MudText>
                 <div class="d-flex">
                     <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" OnClick="OpenLoginDialog" Title="Личный кабинет" />
                     @if (_isLoggedIn)
@@ -273,15 +274,73 @@
 
 
 @code {
+    private bool _isLeaving = false;
+
+    private string GetContainerAnimationClass()
+    {
+        if (_isLeaving) return "scene-leave";
+        if (isRunning) return "scene-enter";
+        return "scene-hidden";
+    }
+
+    private async Task StopTimer()
+    {
+        if (_isLeaving) return;
+
+        cts.Cancel();
+        timer?.Dispose();
+        _animationState = FishingAnimationState.None;
+
+        _isLeaving = true;
+        isRunning = false;
+
+        _animationState = FishingAnimationState.FinalRaise;
+        StateHasChanged();
+
+        await Task.Delay(250);
+
+        _isLeaving = false;
+        StateHasChanged();
+    }
+
+    private bool _isRaiseAnimationActive = false;
+
+    private string GetFinalShakeClass()
+    {
+        if (isRunning && secondsLeft > 0 && secondsLeft <= 5)
+        {
+            return "final-agony";
+        }
+        return "";
+    }
+
     private bool isRadioEnabled = false;
     private int radioVolume = 50;
     private string currentTrackUrl = "";
     private int currentTrackIndex = 1;
     private bool isRadioInitialized = false;
     private bool isRainEnabled = false;
+
+
+    private DateTime _lastRippleTime = DateTime.MinValue;
+
+    private async Task HandleMouseMove(MouseEventArgs e)
+    {
+        var now = DateTime.UtcNow;
+
+        if ((now - _lastRippleTime).TotalMilliseconds > 130)
+        {
+            _lastRippleTime = now;
+            await JS.InvokeVoidAsync("visualEffects.createRipple", "#lake-container", e.ClientX, e.ClientY);
+        }
+    }
+
+
+
+
     private int rainVolume = 50;
     private bool playFog = false;
-    private bool showDevTools = true;
+    private bool showDevTools = true; //
     private bool showSplash = false;
     private bool isNightMode = false;
     private bool _isProcessingAuth = false;
@@ -604,7 +663,10 @@
             {
                 selectedMinutes = profile.LastSelectedMinutes;
                 displayHours = selectedMinutes / 60;
-                displayMinutes = selectedMinutes % 60;
+                int rawMinutes = selectedMinutes % 60;
+                displayMinutes = (int)(Math.Round(rawMinutes / 5.0) * 5);
+                if (displayMinutes > 55) displayMinutes = 0;
+
                 if (!isRunning) secondsLeft = selectedMinutes * 60;
 
                 Console.WriteLine($"--- [LOAD] UI обновлен на: {displayHours}ч {displayMinutes}мин ---");
@@ -817,17 +879,17 @@
 
     private void SyncSelectedMinutes()
     {
-        if (displayHours >= 4) 
+        if (displayHours >= 2)
         {
-            displayHours = 4;
+            displayHours = 2;
             displayMinutes = 0;
         }
-    
+
         selectedMinutes = (displayHours * 60) + displayMinutes;
         if (!isRunning) secondsLeft = selectedMinutes * 60;
-    
-        _ = CheckAuthAndSave(); 
-    
+
+        _ = CheckAuthAndSave();
+
         StateHasChanged();
     }
 
@@ -907,15 +969,36 @@
         if (type == "hours")
         {
             displayHours += step;
-            if (displayHours > 4) displayHours = 0;
-            if (displayHours < 0) displayHours = 4;
+            if (displayHours > 2) displayHours = 0;
+            if (displayHours < 0) displayHours = 2;
+
+            if (displayHours == 2) displayMinutes = 0;
         }
         else
         {
-            displayMinutes += step;
-            if (displayMinutes > 59) displayMinutes = 0;
-            if (displayMinutes < 0) displayMinutes = 59;
+            if (displayHours == 2) return;
+
+            int remainder = displayMinutes % 5;
+
+            if (remainder == 0)
+            {
+                displayMinutes += (step * 5);
+            }
+            else
+            {
+                if (step > 0)
+                {
+                    displayMinutes += (5 - remainder);
+                }
+                else
+                {
+                    displayMinutes -= remainder;
+                }
+            }
+            if (displayMinutes > 55) displayMinutes = 0;
+            if (displayMinutes < 0) displayMinutes = 55;
         }
+
         SyncSelectedMinutes();
     }
 
@@ -990,10 +1073,11 @@
 
     private async Task StartTimer()
     {
+        _isLeaving = false;
         _warning30Played = false;
         _fourSecondsPlayed = false;
 
-        if (isRunning || selectedMinutes <= 0) 
+        if (isRunning || selectedMinutes <= 0)
         {
             if (selectedMinutes <= 0) Snackbar.Add("Выберите время для рыбалки!", Severity.Warning);
             return;
@@ -1001,19 +1085,24 @@
 
         isRunning = true;
         _progressValue = 0;
-    
+
         int totalSeconds = selectedMinutes * 60;
         secondsLeft = totalSeconds;
-        double thresholdSeconds = (double)totalSeconds * 0.10; 
+        double thresholdSeconds = (double)totalSeconds * 0.10;
 
         _halfTimeNagSent = false;
         catchResult = null;
         _currentQuote = _quotes[Random.Shared.Next(_quotes.Length)];
-    
+
         _animationState = FishingAnimationState.InitialDrop;
+        StateHasChanged();
+
         await TriggerSplash();
+        await Task.Delay(200);
 
         _animationState = FishingAnimationState.PassiveFishing;
+        StateHasChanged();
+
         cts = new CancellationTokenSource();
         timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
 
@@ -1024,12 +1113,11 @@
                 secondsLeft--;
                 _progressValue = ((double)(totalSeconds - secondsLeft) / totalSeconds) * 100;
 
-
-                    if (!_halfTimeNagSent && secondsLeft <= totalSeconds / 2)
-                    {
-                        Snackbar.Add("Рыба уже кружит рядом!", Severity.Info);
-                        _halfTimeNagSent = true;
-                    }
+                if (!_halfTimeNagSent && secondsLeft <= totalSeconds / 2)
+                {
+                    Snackbar.Add("Рыба уже кружит рядом!", Severity.Info);
+                    _halfTimeNagSent = true;
+                }
 
                 if (!_warning30Played && secondsLeft == 30)
                 {
@@ -1073,6 +1161,22 @@
         isRunning = false;
         timer?.Dispose();
         cts.Cancel();
+
+        _isLeaving = true; 
+        _animationState = FishingAnimationState.FinalRaise; 
+        
+        await TriggerSplash(); 
+        await JS.InvokeVoidAsync("audioInterop.setVolume", "fish-sound2", 10);
+        await JS.InvokeVoidAsync("audioInterop.play", "fish-sound2");
+        
+        StateHasChanged();
+
+        await Task.Delay(350);
+
+        isRunning = false;
+        _isLeaving = false;
+        _animationState = FishingAnimationState.None;
+
 
         try 
         {
@@ -1143,14 +1247,6 @@
     }
 
 
-    private void StopTimer()
-    {
-        isRunning = false;
-        cts.Cancel();
-        timer?.Dispose();
-        _animationState = FishingAnimationState.None;
-        StateHasChanged();
-    }
 
     private async Task ToggleRain(bool value)
     {
