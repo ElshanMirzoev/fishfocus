@@ -534,7 +534,7 @@
         var token = await JS.InvokeAsync<string?>("localStorage.getItem", "jwt_token");
         if (string.IsNullOrEmpty(token)) {
             _isLoggedIn = false;
-            Console.WriteLine("--- [LOAD] Токен не найден, загрузка отменена. ---");
+            Console.WriteLine("--- [LOAD] Токен не найден, загрузка отменена ---");
             return;
         }
         Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
