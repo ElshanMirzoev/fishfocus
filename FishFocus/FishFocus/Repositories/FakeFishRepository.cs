@@ -48,7 +48,7 @@ public class FakeFishRepository : IFishRepository
             Name = "Карп",
             Description = "Могучая рыба, которую за ее аппетит часто называют «водяным поросенком». Пользуется огромным уважением среди рыболовов за сильное сопротивление.",
             Rarity = 2,
-            Points = 50,
+            Points = 40,
             MinMinutes = 60,
             ImageUrl = "images/fish/mirror_carp.png"
         },
@@ -57,8 +57,8 @@ public class FakeFishRepository : IFishRepository
             Name = "Щука",
             Description = "Грозный хищник, мастер молниеносных атак из засады. Ее вытянутое тело и острые как бритва зубы делают ее опасным противником.",
             Rarity = 2,
-            Points = 75,
-            MinMinutes = 120,
+            Points = 50,
+            MinMinutes = 75,
             ImageUrl = "images/fish/pike.png"
         },
         new Fish
@@ -66,8 +66,8 @@ public class FakeFishRepository : IFishRepository
             Name = "Сом",
             Description = "Гигант речных глубин с длинными усами, ведущий ночной образ жизни. Этот хищник предпочитает отдыхать в самых глубоких омутах и ямах.",
             Rarity = 2,
-            Points = 100,
-            MinMinutes = 180,
+            Points = 70,
+            MinMinutes = 100,
             ImageUrl = "images/fish/catfish.png"
         },
         new Fish
@@ -76,7 +76,7 @@ public class FakeFishRepository : IFishRepository
             Description = "Легендарный океанский хищник, способный развивать невероятную скорость. Его мощное тело и нос-копье — мечта любого профессионального рыболова.",
             Rarity = 3,
             Points = 300,
-            MinMinutes = 239,
+            MinMinutes = 119,
             ImageUrl = "images/fish/marlin.png"
         }
     };
