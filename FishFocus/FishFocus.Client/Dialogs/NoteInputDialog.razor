@@ -1,6 +1,6 @@
-﻿@using MudBlazor
+@using MudBlazor
 
-<MudDialog CloseButton="true">
+<MudDialog Class="@(IsNightMode ? "dialog-night" : "dialog-day")">
     <TitleContent>
         <MudText Typo="Typo.h6">Что вы успели сделать?</MudText>
     </TitleContent>
@@ -16,7 +16,7 @@
                       Lines="2" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Закрыть</MudButton>
+        <MudButton OnClick="Cancel" Color="Color.Inherit">Закрыть</MudButton>
         
         <MudButton Variant="Variant.Filled" 
                    Color="Color.Primary" 
@@ -27,8 +27,50 @@
     </DialogActions>
 </MudDialog>
 
+<style>
+    .dialog-day {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .dialog-night {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .dialog-night .mud-dialog-title {
+        color: #ffffff !important;
+    }
+    /* Input field readability in night theme */
+    .dialog-night .mud-input {
+        color: #ffffff !important;
+    }
+    .dialog-night .mud-input-label {
+        color: #8a99ad !important;
+    }
+    .dialog-night .mud-input-helper-text {
+        color: #8a99ad !important;
+    }
+    .dialog-night .mud-input-counter {
+        color: #8a99ad !important;
+    }
+    /* Button readability in night theme */
+    .dialog-night .mud-button-text {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    .dialog-night .mud-button-text:hover {
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    .dialog-night .mud-button-filled.mud-button-disabled {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        color: rgba(255, 255, 255, 0.25) !important;
+    }
+</style>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public bool IsNightMode { get; set; }
+    
     private string NoteText { get; set; } = "";
 
     private void Submit() => MudDialog.Close(DialogResult.Ok(NoteText));

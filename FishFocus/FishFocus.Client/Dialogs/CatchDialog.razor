@@ -1,7 +1,7 @@
-﻿@using FishFocus.Shared.Models
+@using FishFocus.Shared.Models
 @using MudBlazor
 
-<MudDialog Class="@(IsNight ? "night-dialog-inner" : "")">
+<MudDialog Class="@(IsNightMode ? "night-dialog-inner" : "day-dialog-inner")">
     <DialogContent>
         <div class="d-flex flex-column align-center py-4" style="min-width: 300px;">
             @if (CatchResult?.Fish != null)
@@ -14,7 +14,7 @@
                                   Height="160" 
                                   Alt="@CatchResult.Fish.Name" 
                                   ObjectFit="ObjectFit.Contain"
-                                  Class="@(IsNight ? "rounded-lg mud-elevation-4 pa-2 fish-image-container-night" : "rounded-lg mud-elevation-4 pa-2")" />
+                                  Class="@(IsNightMode ? "rounded-lg mud-elevation-4 pa-2 fish-image-container-night" : "rounded-lg mud-elevation-4 pa-2")" />
                     }
                 </div>
 
@@ -24,7 +24,7 @@
                 
                 <div class="mt-4 text-center">
                     <MudText Typo="Typo.h6">Начислено: <b>+@CatchResult.TotalPoints pts</b></MudText>
-                    <MudText Typo="Typo.body2" Class="@(IsNight ? "text-night-muted" : "mud-text-secondary")">
+                    <MudText Typo="Typo.body2" Class="@(IsNightMode ? "text-night-muted" : "mud-text-secondary")">
                         Базовые: @CatchResult.BasePoints | Бонус: +@CatchResult.TimeBonus
                     </MudText>
                 </div>
@@ -43,9 +43,29 @@
     </DialogActions>
 </MudDialog>
 
+<style>
+    .night-dialog-inner {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .day-dialog-inner {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .night-dialog-inner .mud-dialog-title {
+        color: #ffffff !important;
+    }
+    .text-night-muted {
+        color: #8a99ad !important;
+    }
+    .fish-image-container-night {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+</style>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public FishCatchResult CatchResult { get; set; } = default!;
-    [Parameter] public bool IsNight { get; set; }
+    [Parameter] public bool IsNightMode { get; set; }
     private void HandleClose() => MudDialog.Close(DialogResult.Ok(true));
 }

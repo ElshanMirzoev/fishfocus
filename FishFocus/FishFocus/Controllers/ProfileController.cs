@@ -1,4 +1,4 @@
-﻿using FishFocus.Data;
+using FishFocus.Data;
 using FishFocus.Shared.DTOs.Profile;
 using FishFocus.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -53,6 +53,7 @@ public class ProfileController : ControllerBase
             IsThunderEnabled = user.IsThunderEnabled,
             ThunderVolume = user.ThunderVolume,
             LastSelectedMinutes = user.LastSelectedMinutes,
+            AvatarData = user.AvatarData,
 
             CaughtFishes = user.CaughtFishes,
             DiaryEntries = user.DiaryEntries
@@ -154,9 +155,131 @@ public class ProfileController : ControllerBase
         return Ok(leaders);
     }
 
+    [HttpPost("feedback")]
+    public async Task<IActionResult> SubmitFeedback([FromBody] Feedback feedback)
+    {
+        var userId = GetUserId();
+        if (userId is not null)
+        {
+            feedback.UserId = userId.Value;
+            var user = await _db.Users.FindAsync(userId.Value);
+            if (user != null)
+            {
+                feedback.Username = user.Username;
+            }
+        }
+        feedback.CreatedAt = DateTime.UtcNow;
+        _db.Feedbacks.Add(feedback);
+        await _db.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpPost("avatar")]
+    public async Task<IActionResult> UpdateAvatar([FromBody] AvatarUpdateRequest req)
+    {
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var user = await _db.Users.FindAsync(userId.Value);
+        if (user is null) return NotFound();
+
+        user.AvatarData = req.AvatarData;
+        await _db.SaveChangesAsync();
+        return Ok(new { AvatarData = user.AvatarData });
+    }
+
+    [HttpGet("public/{username}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPublicProfile(string username)
+    {
+        var user = await _db.Users
+            .Include(u => u.CaughtFishes)
+            .ThenInclude(f => f.Fish)
+            .Include(u => u.DiaryEntries)
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
+
+        if (user is null) return NotFound();
+
+        var totalSessions = user.DiaryEntries?.Count ?? 0;
+        var totalMinutes = user.DiaryEntries?.Sum(d => d.MinutesSpent) ?? 0;
+        
+        var favoriteFish = "Нет улова";
+        if (user.CaughtFishes != null && user.CaughtFishes.Any())
+        {
+            var fav = user.CaughtFishes
+                .Where(c => c.Fish != null && !string.IsNullOrEmpty(c.Fish.Name))
+                .GroupBy(c => c.Fish.Name)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+            if (fav != null)
+            {
+                favoriteFish = $"{fav.Key} ({fav.Count()} шт.)";
+            }
+        }
+
+        var streak = CalculateStreak(user.DiaryEntries ?? new());
+
+        return Ok(new PublicProfileDto
+        {
+            Username = user.Username,
+            AvatarData = user.AvatarData,
+            TotalPoints = user.TotalPoints,
+            TotalSessions = totalSessions,
+            TotalMinutesFished = totalMinutes,
+            FavoriteFish = favoriteFish,
+            StreakDays = streak
+        });
+    }
+
+    private int CalculateStreak(List<DiaryEntry> entries)
+    {
+        if (entries == null || !entries.Any()) return 0;
+        
+        var dates = entries
+            .Where(e => e != null)
+            .Select(e => e.CompletionTime.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+            
+        if (!dates.Any()) return 0;
+        
+        var today = DateTime.UtcNow.Date;
+        var yesterday = today.AddDays(-1);
+        
+        if (dates[0] != today && dates[0] != yesterday)
+        {
+            return 0;
+        }
+        
+        int streak = 0;
+        var currentCheckDate = dates[0];
+        
+        for (int i = 0; i < dates.Count; i++)
+        {
+            if (dates[i] == currentCheckDate)
+            {
+                streak++;
+                currentCheckDate = currentCheckDate.AddDays(-1);
+            }
+            else if (dates[i] < currentCheckDate)
+            {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    public class AvatarUpdateRequest
+    {
+        public string? AvatarData { get; set; }
+    }
+
     private int? GetUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(claim, out var id) ? id : null;
     }
 }
+

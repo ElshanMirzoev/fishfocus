@@ -1,7 +1,7 @@
-﻿@using FishFocus.Shared.Models
+@using FishFocus.Shared.Models
 @using MudBlazor
 
-<MudDialog>
+<MudDialog Class="@(IsNightMode ? "dialog-night" : "dialog-day")">
     <DialogContent>
         <div style="max-height: 400px; overflow-y: auto;">
             @if (Entries == null || !Entries.Any())
@@ -10,29 +10,48 @@
             }
             else
             {
-                <MudTable Items="@Entries.OrderByDescending(e => e.CompletionTime)" Hover="true" Breakpoint="Breakpoint.None" Dense="true">
+                <MudTable Items="@Entries.OrderByDescending(e => e.CompletionTime)" Hover="true" Breakpoint="Breakpoint.None" Dense="true" Class="theme-table">
                     <HeaderContent>
-                        <MudTh>Дата и время</MudTh>
-                        <MudTh>Время</MudTh>
-                        <MudTh>Улов</MudTh>
-                        <MudTh>Заметка</MudTh>
+                        <MudTh Class="theme-th">Дата и время</MudTh>
+                        <MudTh Class="theme-th">Время</MudTh>
+                        <MudTh Class="theme-th">Улов</MudTh>
+                        <MudTh Class="theme-th">Заметка</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="Дата">@context.CompletionTime.ToString("dd.MM HH:mm")</MudTd>
-                        <MudTd DataLabel="Мин">@context.MinutesSpent мин</MudTd>
-                        <MudTd DataLabel="Рыба">@context.FishName</MudTd>
-                        <MudTd DataLabel="Заметка"><i>@context.Note</i></MudTd>
+                        <MudTd DataLabel="Дата" Class="theme-td">@context.CompletionTime.ToString("dd.MM HH:mm")</MudTd>
+                        <MudTd DataLabel="Мин" Class="theme-td">@context.MinutesSpent мин</MudTd>
+                        <MudTd DataLabel="Рыба" Class="theme-td">@context.FishName</MudTd>
+                        <MudTd DataLabel="Заметка" Class="theme-td"><i>@context.Note</i></MudTd>
                     </RowTemplate>
                 </MudTable>
             }
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="() => MudDialog.Close()">Закрыть</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="() => MudDialog.Close()">Закрыть</MudButton>
     </DialogActions>
 </MudDialog>
 
+<style>
+    .dialog-day {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .dialog-night {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .dialog-day .theme-table { background-color: transparent !important; }
+    .dialog-night .theme-table { background-color: transparent !important; }
+    .dialog-day .theme-td { color: #2c3e50 !important; }
+    .dialog-night .theme-td { color: #e0e6ed !important; }
+    .dialog-day .theme-th { color: #1a252f !important; font-weight: bold; }
+    .dialog-night .theme-th { color: #ffffff !important; font-weight: bold; }
+</style>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public bool IsNightMode { get; set; }
     [Parameter] public List<DiaryEntry> Entries { get; set; } = new();
 }

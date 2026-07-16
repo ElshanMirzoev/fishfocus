@@ -1,4 +1,4 @@
-﻿using FishFocus.Shared.Models;
+using FishFocus.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Reflection.Emit;
@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Fish> Fishes { get; set; }
     public DbSet<FishCatchResult> CaughtFishes { get; set; }
     public DbSet<DiaryEntry> DiaryEntries { get; set; }
+    public DbSet<Feedback> Feedbacks { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

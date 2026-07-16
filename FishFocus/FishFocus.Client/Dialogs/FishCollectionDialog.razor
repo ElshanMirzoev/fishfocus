@@ -1,11 +1,11 @@
-﻿@using FishFocus.Shared.Models
+@using FishFocus.Shared.Models
 @using MudBlazor
 @inject IDialogService DialogService
 
-<MudDialog>
+<MudDialog Class="@(IsNightMode ? "dialog-night" : "dialog-day")">
     <TitleContent>
         <div class="d-flex align-center">
-            <MudText Typo="Typo.h6">Пойманные рыбы</MudText>
+            <MudText Typo="Typo.h6" Class="theme-title">Пойманные рыбы</MudText>
         </div>
     </TitleContent>
     <DialogContent>
@@ -53,8 +53,38 @@
     </DialogActions>
 </MudDialog>
 
+<style>
+    .dialog-day {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .dialog-night {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .dialog-day .theme-title { color: #1a252f !important; }
+    .dialog-night .theme-title { color: #ffffff !important; }
+
+    .dialog-day .fish-collection-card {
+        background: #f8f9fa !important;
+        border: 1px solid #e9ecef !important;
+        color: #2c3e50 !important;
+    }
+    .dialog-night .fish-collection-card {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #ffffff !important;
+    }
+    .dialog-day .fish-card-name { color: #1a252f !important; font-weight: bold; }
+    .dialog-night .fish-card-name { color: #ffffff !important; font-weight: bold; }
+    .dialog-day .fish-card-desc { color: #5a697d !important; }
+    .dialog-night .fish-card-desc { color: #8a99ad !important; }
+</style>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public bool IsNightMode { get; set; }
     [Parameter] public List<FishCatchResult> CatchHistory { get; set; } = new();
 
     private List<FishGroup> GroupedFish => CatchHistory
@@ -75,7 +105,7 @@
 
     private async Task ShowDetails(Fish fish)
     {
-        var parameters = new DialogParameters { ["Fish"] = fish };
+        var parameters = new DialogParameters { ["Fish"] = fish, ["IsNightMode"] = IsNightMode };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
         await DialogService.ShowAsync<FishDetailsDialog>(fish.Name, parameters, options);
     }

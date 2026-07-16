@@ -1,4 +1,4 @@
-﻿using FishFocus.Shared.Models;
+using FishFocus.Shared.Models;
 
 namespace FishFocus.Shared.DTOs.Profile;
 
@@ -35,6 +35,7 @@ public class UserProfileDto
 
     // Cчетчик минут
     public int LastSelectedMinutes { get; set; }
+    public string? AvatarData { get; set; }
 
     public List<FishCatchResult> CaughtFishes { get; set; } = new();
     public List<DiaryEntry> DiaryEntries { get; set; } = new();

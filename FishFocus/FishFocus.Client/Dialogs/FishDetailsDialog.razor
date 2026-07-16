@@ -1,7 +1,7 @@
-﻿@using FishFocus.Shared.Models
+@using FishFocus.Shared.Models
 @using MudBlazor
 
-<MudDialog>
+<MudDialog Class="@(IsNightMode ? "dialog-night" : "dialog-day")">
     <DialogContent>
         @if (Fish != null)
         {
@@ -33,8 +33,8 @@
                 {
                     <MudText Typo="Typo.body1" 
                                 Align="Align.Center" 
-                                Style="font-style: italic; color: #424242; line-height: 1.5;" 
-                                Class="px-4 mb-2">
+                                Style="font-style: italic; line-height: 1.5;" 
+                                Class="px-4 mb-2 fish-desc">
                         "@Fish.Description"
                     </MudText>
                 }                
@@ -51,9 +51,42 @@
     </DialogActions>
 </MudDialog>
 
+<style>
+    .dialog-day {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .dialog-night {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .dialog-day .fish-desc {
+        color: #424242 !important;
+    }
+    .dialog-night .fish-desc {
+        color: #e0e6ed !important;
+    }
+    /* Close button visibility in dark theme */
+    .dialog-night .mud-dialog-close-button {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    .dialog-night .mud-dialog-close-button:hover {
+        color: #ffffff !important;
+    }
+    /* Chip text and border visibility in dark theme */
+    .dialog-night .mud-chip {
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    .dialog-night .mud-chip-text.mud-chip-default {
+        color: #8a99ad !important;
+    }
+</style>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public Fish Fish { get; set; } = new();
+    [Parameter] public bool IsNightMode { get; set; }
 
     private void Close() => MudDialog.Close();
 

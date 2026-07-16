@@ -1,0 +1,231 @@
+@using FishFocus.Shared.DTOs.Profile
+@using MudBlazor
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog Class="@(IsNightMode ? "public-profile-dialog night-theme" : "public-profile-dialog day-theme")">
+    <DialogContent>
+        <div class="profile-container py-4">
+            
+            @if (_profile == null)
+            {
+                <div class="d-flex justify-center pa-8">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else
+            {
+                <!-- Аватарка и Профиль -->
+                <div class="d-flex flex-column align-center mb-6">
+                    <div class="avatar-wrapper mb-3" style="background: @GetAvatarBackgroundStyle();">
+                        @if (IsBase64Avatar(_profile.AvatarData))
+                        {
+                            <img src="@_profile.AvatarData" class="user-custom-avatar" alt="Avatar" />
+                        }
+                        else
+                        {
+                            <span class="avatar-letter">@GetInitial()</span>
+                        }
+                    </div>
+                    
+                    <MudText Typo="Typo.h5" Class="username-title font-weight-bold">@_profile.Username</MudText>
+                    <MudText Typo="Typo.body2" Class="text-muted">Рыболов FishFocus</MudText>
+                </div>
+
+                <MudDivider Class="my-4" />
+
+                <!-- Статистика -->
+                <div class="stats-section">
+                    <MudText Typo="Typo.h6" Class="mb-3 font-weight-bold text-center">Достижения</MudText>
+                    
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <div class="stat-card">
+                                <span class="stat-value">@_profile.TotalPoints</span>
+                                <span class="stat-label">Всего очков</span>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <div class="stat-card">
+                                <span class="stat-value">@_profile.StreakDays</span>
+                                <span class="stat-label">Дней подряд</span>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <div class="stat-card">
+                                <span class="stat-value">@_profile.TotalSessions</span>
+                                <span class="stat-label">Всего сессий</span>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <div class="stat-card">
+                                <span class="stat-value">@_profile.TotalMinutesFished мин</span>
+                                <span class="stat-label">Время в фокусе</span>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                    
+                    <div class="mt-4 pa-3 favorite-fish-card">
+                        <div class="d-flex align-center justify-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Color="Color.Primary" />
+                            <span class="favorite-fish-title">Частый улов:</span>
+                            <span class="favorite-fish-name">@_profile.FavoriteFish</span>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="() => MudDialog.Close()">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .public-profile-dialog {
+        border-radius: 16px !important;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .public-profile-dialog.day-theme {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .public-profile-dialog.night-theme {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .public-profile-dialog.day-theme .username-title { color: #1a252f !important; }
+    .public-profile-dialog.day-theme .text-muted { color: #5a697d !important; }
+    
+    .public-profile-dialog.night-theme .username-title { color: #ffffff !important; }
+    .public-profile-dialog.night-theme .text-muted { color: #8a99ad !important; }
+
+    .avatar-wrapper {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.1);
+    }
+    .user-custom-avatar {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .avatar-letter {
+        font-size: 2.2rem;
+        font-weight: bold;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .stat-card {
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: transform 0.2s, background-color 0.2s;
+    }
+    .public-profile-dialog.day-theme .stat-card {
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .public-profile-dialog.day-theme .stat-card:hover {
+        background: rgba(0, 0, 0, 0.06);
+        transform: translateY(-2px);
+    }
+    .public-profile-dialog.night-theme .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .public-profile-dialog.night-theme .stat-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+    }
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: var(--mud-palette-primary);
+    }
+    .stat-label {
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .public-profile-dialog.day-theme .stat-label { color: #5a697d !important; }
+    .public-profile-dialog.night-theme .stat-label { color: #8a99ad !important; }
+
+    .favorite-fish-card {
+        border-radius: 8px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px dashed rgba(0, 0, 0, 0.1);
+    }
+    .public-profile-dialog.night-theme .favorite-fish-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+    .favorite-fish-title {
+        font-size: 0.85rem;
+        color: #8a99ad;
+    }
+    .public-profile-dialog.day-theme .favorite-fish-title {
+        color: #5a697d;
+    }
+    .favorite-fish-name {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+</style>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string TargetUsername { get; set; } = "";
+    [Parameter] public bool IsNightMode { get; set; }
+
+    private PublicProfileDto? _profile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _profile = await Http.GetFromJsonAsync<PublicProfileDto>($"api/profile/public/{TargetUsername}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Не удалось загрузить профиль: {ex.Message}", Severity.Error);
+            MudDialog.Close();
+        }
+    }
+
+    private string GetInitial()
+    {
+        if (string.IsNullOrWhiteSpace(TargetUsername)) return "U";
+        return TargetUsername.Trim()[..1].ToUpper();
+    }
+
+    private string GetAvatarBackgroundStyle()
+    {
+        if (string.IsNullOrEmpty(_profile?.AvatarData))
+        {
+            return "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+        }
+        if (IsBase64Avatar(_profile.AvatarData))
+        {
+            return "transparent";
+        }
+        return _profile.AvatarData;
+    }
+
+    private bool IsBase64Avatar(string? data)
+    {
+        return data != null && data.StartsWith("data:image/");
+    }
+}

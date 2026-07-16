@@ -324,7 +324,7 @@ namespace FishFocus.Client.Pages
                         await Http.PostAsJsonAsync("api/profile/save-catch", response);
                     }
 
-                    var parameters = new DialogParameters { ["CatchResult"] = response, ["IsNight"] = isNightMode };
+                    var parameters = new DialogParameters { ["CatchResult"] = response, ["IsNightMode"] = isNightMode };
                     var options = new DialogOptions { BackdropClick = false, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
 
                     var catchDialog = await DialogService.ShowAsync<CatchDialog>("Улов", parameters, options);
@@ -332,8 +332,9 @@ namespace FishFocus.Client.Pages
 
                     if (result is not null && !result.Canceled)
                     {
+                        var noteParameters = new DialogParameters { ["IsNightMode"] = isNightMode };
                         var noteOptions = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, BackdropClick = false };
-                        var noteDialog = await DialogService.ShowAsync<NoteInputDialog>("Запись в дневник", noteOptions);
+                        var noteDialog = await DialogService.ShowAsync<NoteInputDialog>("Запись в дневник", noteParameters, noteOptions);
                         var noteResult = await noteDialog.Result;
 
                         if (noteResult is not null && !noteResult.Canceled)

@@ -1,4 +1,4 @@
-﻿namespace FishFocus.Shared.Models;
+namespace FishFocus.Shared.Models;
 
 public class User
 {
@@ -36,6 +36,7 @@ public class User
 
     // Минуты
     public int LastSelectedMinutes { get; set; }
+    public string? AvatarData { get; set; }
     public List<FishCatchResult> CaughtFishes { get; set; } = new();
     public List<DiaryEntry> DiaryEntries { get; set; } = new();
 }

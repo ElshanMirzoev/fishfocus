@@ -1,8 +1,10 @@
-﻿@using FishFocus.Shared.DTOs.Profile
+@using FishFocus.Shared.DTOs.Profile
 @using MudBlazor
 @inject HttpClient Http
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-<MudDialog>
+<MudDialog Class="@(IsNightMode ? "dialog-night" : "dialog-day")">
     <DialogContent>
         <div style="max-height: 450px; overflow-y: auto;">
             @if (_leaders == null)
@@ -17,14 +19,14 @@
             }
             else
             {
-                <MudTable Items="@_leaders" Hover="true" Breakpoint="Breakpoint.None" Dense="true" Elevation="0">
+                <MudTable Items="@_leaders" Hover="true" Breakpoint="Breakpoint.None" Dense="true" Elevation="0" Class="theme-table">
                     <HeaderContent>
-                        <MudTh>Место</MudTh>
-                        <MudTh>Рыболов</MudTh>
-                        <MudTh>Очки</MudTh>
+                        <MudTh Class="theme-th">Место</MudTh>
+                        <MudTh Class="theme-th">Рыболов</MudTh>
+                        <MudTh Class="theme-th">Очки</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="Место">
+                        <MudTd DataLabel="Место" Class="theme-td">
                             @if (_leaders.IndexOf(context) == 0)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Small" />
@@ -34,27 +36,58 @@
                                 @(_leaders.IndexOf(context) + 1)
                             }
                         </MudTd>
-                        <MudTd DataLabel="Имя">@context.Username</MudTd>
-                        <MudTd DataLabel="Очки"><b>@context.TotalPoints</b></MudTd>
+                        <MudTd DataLabel="Имя" Class="theme-td username-col" @onclick="() => ViewUserProfile(context.Username)">
+                            @context.Username
+                        </MudTd>
+                        <MudTd DataLabel="Очки" Class="theme-td"><b>@context.TotalPoints</b></MudTd>
                     </RowTemplate>
                 </MudTable>
             }
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="() => MudDialog.Close()">Закрыть</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="() => MudDialog.Close()">Закрыть</MudButton>
     </DialogActions>
 </MudDialog>
 
+<style>
+    .dialog-day {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .dialog-night {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .dialog-day .theme-table { background-color: transparent !important; }
+    .dialog-night .theme-table { background-color: transparent !important; }
+    .dialog-day .theme-td { color: #2c3e50 !important; }
+    .dialog-night .theme-td { color: #e0e6ed !important; }
+    .dialog-day .theme-th { color: #1a252f !important; font-weight: bold; }
+    .dialog-night .theme-th { color: #ffffff !important; font-weight: bold; }
+    .username-col {
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--mud-palette-primary) !important;
+        transition: opacity 0.2s;
+    }
+    .username-col:hover {
+        opacity: 0.8;
+        text-decoration: underline;
+    }
+</style>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public bool IsNightMode { get; set; }
+    
     private List<LeaderboardEntryDto>? _leaders;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // бэкенду
             _leaders = await Http.GetFromJsonAsync<List<LeaderboardEntryDto>>("api/profile/leaderboard");
         }
         catch (Exception ex)
@@ -62,5 +95,16 @@
             Console.WriteLine($"Ошибка загрузки таблицы лидеров: {ex.Message}");
             _leaders = new();
         }
+    }
+
+    private async Task ViewUserProfile(string targetUsername)
+    {
+        var parameters = new DialogParameters
+        {
+            ["TargetUsername"] = targetUsername,
+            ["IsNightMode"] = IsNightMode
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        await DialogService.ShowAsync<PublicProfileDialog>($"Профиль {targetUsername}", parameters, options);
     }
 }

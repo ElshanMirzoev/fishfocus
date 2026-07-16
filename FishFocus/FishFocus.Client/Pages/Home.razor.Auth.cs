@@ -27,22 +27,50 @@ namespace FishFocus.Client.Pages
 
         private async Task OpenLeaderboard()
         {
+            var parameters = new DialogParameters { ["IsNightMode"] = isNightMode };
             var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-            await DialogService.ShowAsync<LeaderboardDialog>("Таблица лидеров", options);
+            await DialogService.ShowAsync<LeaderboardDialog>("Таблица лидеров", parameters, options);
         }
 
         private async Task OpenDiary()
         {
-            var parameters = new DialogParameters { ["Entries"] = _diaryEntries };
+            var parameters = new DialogParameters { ["Entries"] = _diaryEntries, ["IsNightMode"] = isNightMode };
             var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
             await DialogService.ShowAsync<DiaryDialog>("Дневник успехов", parameters, options);
         }
 
         private async Task OpenCollection()
         {
-            var parameters = new DialogParameters { ["CatchHistory"] = CatchHistory };
+            var parameters = new DialogParameters { ["CatchHistory"] = CatchHistory, ["IsNightMode"] = isNightMode };
             var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
             await DialogService.ShowAsync<FishCollectionDialog>("Моя коллекция", parameters, options);
+        }
+
+        private async Task OpenProfileOrLogin()
+        {
+            if (_isLoggedIn)
+            {
+                var username = await JS.InvokeAsync<string?>("localStorage.getItem", "username") ?? "Пользователь";
+                var parameters = new DialogParameters
+                {
+                    ["Username"] = username,
+                    ["Email"] = UserEmail,
+                    ["TotalScore"] = TotalScore,
+                    ["AvatarData"] = AvatarData,
+                    ["CatchHistory"] = CatchHistory,
+                    ["DiaryEntries"] = _diaryEntries,
+                    ["IsNightMode"] = isNightMode
+                };
+                var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+                var dialog = await DialogService.ShowAsync<CabinetDialog>("Личный кабинет", parameters, options);
+                var result = await dialog.Result;
+
+                await LoadUserSettings();
+            }
+            else
+            {
+                await OpenLoginDialog();
+            }
         }
 
         private async Task OpenLoginDialog()
@@ -87,6 +115,9 @@ namespace FishFocus.Client.Pages
                     return;
                 }
                 _isLoggedIn = true;
+                UserEmail = profile.Email ?? "";
+                Username = profile.Username ?? "Пользователь";
+                AvatarData = profile.AvatarData;
                 Console.WriteLine($"--- [LOAD] ДАННЫЕ С СЕРВЕРА: Таймер={profile.LastSelectedMinutes}, Очки={profile.TotalPoints} ---");
                 TotalScore = profile.TotalPoints;
 
@@ -226,6 +257,9 @@ namespace FishFocus.Client.Pages
             secondsLeft = 1800;
 
             TotalScore = 0;
+            UserEmail = "";
+            Username = "Пользователь";
+            AvatarData = null;
             CatchHistory.Clear();
             _diaryEntries.Clear();
 

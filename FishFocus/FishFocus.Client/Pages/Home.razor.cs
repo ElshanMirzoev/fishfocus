@@ -55,7 +55,29 @@ namespace FishFocus.Client.Pages
         private FishCatchResult? catchResult;
         private int TotalScore = 0;
         private bool _isLoggedIn = false;
+        private string? AvatarData;
+        private string UserEmail = "";
+        private string Username = "Пользователь";
         private List<FishCatchResult> CatchHistory = new();
+
+        private string GetNavAvatarStyle()
+        {
+            if (string.IsNullOrEmpty(AvatarData))
+            {
+                return "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+            }
+            if (AvatarData.StartsWith("data:image/"))
+            {
+                return "transparent";
+            }
+            return AvatarData;
+        }
+
+        private string GetAvatarInitial()
+        {
+            if (string.IsNullOrWhiteSpace(Username)) return "U";
+            return Username.Trim()[..1].ToUpper();
+        }
         private CancellationTokenSource? _adjustCts;
         private List<DiaryEntry> _diaryEntries = new();
         private bool _isAdjusting = false;

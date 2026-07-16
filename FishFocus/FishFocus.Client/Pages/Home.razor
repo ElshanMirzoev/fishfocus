@@ -137,15 +137,41 @@
         </div>
     </div>
     <div class="settings-panel">
-        <div class="d-flex justify-space-between align-center mb-2">
-                <div class="d-flex">
-                    <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" OnClick="OpenLoginDialog" Title="Личный кабинет" />
-                    @if (_isLoggedIn)
-                    {
-                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Error" OnClick="Logout" Title="Выйти" />
-                    }
+        @if (_isLoggedIn)
+        {
+            <div class="profile-nav-card mb-4">
+                <button type="button" class="avatar-nav-btn" @onclick="OpenProfileOrLogin" title="Личный кабинет">
+                    <div class="nav-avatar-circle" style="background: @GetNavAvatarStyle();">
+                        @if (AvatarData != null && AvatarData.StartsWith("data:image/"))
+                        {
+                            <img src="@AvatarData" class="nav-avatar-img" />
+                        }
+                        else
+                        {
+                            <span>@GetAvatarInitial()</span>
+                        }
+                    </div>
+                </button>
+                <div class="profile-nav-info" @onclick="OpenProfileOrLogin" style="cursor: pointer; flex-grow: 1; margin-left: 8px;">
+                    <div class="profile-nav-name">@Username</div>
+                    <div class="profile-nav-score">Очки: @TotalScore</div>
                 </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Error" OnClick="Logout" Title="Выйти" />
             </div>
+        }
+        else
+        {
+            <div class="d-flex justify-center mb-4">
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Inherit" 
+                           StartIcon="@Icons.Material.Filled.AccountCircle" 
+                           OnClick="OpenProfileOrLogin" 
+                           FullWidth="true" 
+                           Style="border-color: rgba(255,255,255,0.2);">
+                    Войти в аккаунт
+                </MudButton>
+            </div>
+        }
             
         <div class="time-picker-container mb-2">
             <div class="time-box">
@@ -216,13 +242,7 @@
 
         <div class="setting-block"><MudSwitch Value="playFog" T="bool" ValueChanged="ToggleFog" Label="Туман" Color="Color.Info" Disabled="@(!_isAppReady)" /></div>
 
-        <div class="score-display-panel mb-2">
-            <div class="score-icon-box"><MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Medium" /></div>
-            <div class="score-text-box">
-                <span class="score-label">Мои очки</span>
-                <span class="score-value">@TotalScore</span>
-            </div>
-        </div>
+
 
 <div class="d-flex gap-2 mb-4">
     <div class="diary-container flex-grow-1 justify-center py-2">
@@ -268,5 +288,84 @@
 <audio id="fish-sound1" src="audio/fish-sound1.mp3"></audio>
 <audio id="fish-sound2" src="audio/fish-sound2.mp3"></audio>
 <audio id="fish-warning" src="audio/fish-warning.mp3"></audio>
+
+<style>
+    .avatar-nav-btn {
+        background: none;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .avatar-nav-btn:hover {
+        transform: scale(1.05);
+    }
+    .nav-avatar-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 0.95rem;
+        overflow: hidden;
+        border: 1.5px solid rgba(255,255,255,0.3);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .nav-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-nav-card {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1.5px solid rgba(255, 255, 255, 0.1);
+        padding: 8px 12px;
+        border-radius: 12px;
+        transition: background-color 0.2s;
+    }
+    .profile-nav-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .profile-nav-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .profile-nav-name {
+        font-weight: bold;
+        font-size: 0.9rem;
+        color: #ffffff;
+        line-height: 1.2;
+    }
+    .day-theme .profile-nav-name {
+        color: #1a252f;
+    }
+    .profile-nav-score {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .day-theme .profile-nav-score {
+        color: rgba(0, 0, 0, 0.6);
+    }
+    .day-theme .profile-nav-card {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+    .day-theme .profile-nav-card:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+    .day-theme .nav-avatar-circle {
+        border-color: rgba(0, 0, 0, 0.2);
+    }
+</style>
 
 

@@ -1,0 +1,518 @@
+@using FishFocus.Shared.Models
+@using FishFocus.Shared.DTOs.Profile
+@using MudBlazor
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog Class="@(IsNightMode ? "cabinet-dialog night-theme" : "cabinet-dialog day-theme")">
+    <DialogContent>
+        <div class="cabinet-container py-4">
+            
+            <!-- Аватарка и Профиль -->
+            <div class="d-flex flex-column align-center mb-6">
+                <div class="avatar-wrapper mb-3" style="background: @GetAvatarBackgroundStyle();">
+                    @if (IsBase64Avatar(AvatarData))
+                    {
+                        <img src="@AvatarData" class="user-custom-avatar" alt="Avatar" />
+                    }
+                    else
+                    {
+                        <span class="avatar-letter">@GetInitial()</span>
+                    }
+                </div>
+                
+                <MudText Typo="Typo.h5" Class="username-title font-weight-bold">@Username</MudText>
+                <MudText Typo="Typo.body2" Class="text-muted">@Email</MudText>
+
+                <!-- Смена аватарки -->
+                <div class="d-flex flex-column gap-2 mt-3 align-center">
+                    <div class="d-flex gap-2 align-center">
+                        <InputFile id="avatar-file-input" OnChange="OnAvatarUploaded" hidden accept=".jpg,.jpeg,.png,.webp" />
+                        <MudButton HtmlTag="label" 
+                                   Variant="Variant.Outlined" 
+                                   Color="Color.Primary" 
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.PhotoCamera" 
+                                   for="avatar-file-input">
+                            Загрузить фото
+                        </MudButton>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-2 justify-center">
+                        @foreach (var grad in _presetGradients)
+                        {
+                            <button type="button" 
+                                    class="color-preset-btn @(AvatarData == grad.Value ? "active" : "")" 
+                                    style="background: @grad.Value;" 
+                                    title="@grad.Name" 
+                                    @onclick="() => SelectGradient(grad.Value)">
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <MudDivider Class="my-4" />
+
+            <!-- Статистика -->
+            <div class="stats-section mb-6">
+                <MudText Typo="Typo.h6" Class="mb-3 font-weight-bold">Статистика активности</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="6">
+                        <div class="stat-card">
+                            <span class="stat-value">@_streakDays</span>
+                            <span class="stat-label">Дней подряд</span>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <div class="stat-card">
+                            <span class="stat-value">@_totalSessions</span>
+                            <span class="stat-label">Всего сессий</span>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <div class="stat-card">
+                            <span class="stat-value">@_totalMinutesSpent мин</span>
+                            <span class="stat-label">Общее время</span>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <div class="stat-card">
+                            <span class="stat-value">@_favoriteFish</span>
+                            <span class="stat-label">Частая рыба</span>
+                        </div>
+                    </MudItem>
+                </MudGrid>
+            </div>
+
+            <!-- Интересный факт -->
+            <div class="fact-bubble mb-6 pa-4">
+                <div class="d-flex align-center mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="Color.Warning" Class="mr-2" />
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Минутка философии</MudText>
+                </div>
+                <MudText Typo="Typo.body2" Class="fact-text">@_comparisonFact</MudText>
+            </div>
+
+            <MudDivider Class="my-4" />
+
+            <!-- Обратная связь -->
+            <div class="feedback-section">
+                <MudText Typo="Typo.h6" Class="mb-3 font-weight-bold">Обратная связь</MudText>
+                
+                <div class="d-flex gap-1 mb-3 flex-wrap">
+                    @foreach (var type in _feedbackTypes)
+                    {
+                        <MudButton Variant="@(_feedbackType == type ? Variant.Filled : Variant.Outlined)"
+                                   Color="@(type == "Ошибка" ? Color.Error : Color.Primary)"
+                                   Size="Size.Small"
+                                   OnClick="() => _feedbackType = type">
+                            @type
+                        </MudButton>
+                    }
+                </div>
+
+                <MudTextField T="string" 
+                              Label="Ваш отзыв, предложение или описание проблемы..." 
+                              Variant="Variant.Outlined" 
+                              Lines="3" 
+                              Class="mb-3" 
+                              @bind-Value="_feedbackText" />
+
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           FullWidth="true" 
+                           OnClick="SubmitFeedback" 
+                           Disabled="_isSubmittingFeedback">
+                    @(_isSubmittingFeedback ? "Отправка..." : "Отправить отзыв")
+                </MudButton>
+            </div>
+
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Secondary" Variant="Variant.Text" OnClick="() => MudDialog.Close()">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .cabinet-dialog {
+        border-radius: 16px !important;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .cabinet-dialog.day-theme {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    .cabinet-dialog.night-theme {
+        background-color: #151d2a !important;
+        color: #ffffff !important;
+    }
+    .cabinet-dialog.day-theme .username-title { color: #1a252f !important; }
+    .cabinet-dialog.day-theme .text-muted { color: #5a697d !important; }
+    
+    .cabinet-dialog.night-theme .username-title { color: #ffffff !important; }
+    .cabinet-dialog.night-theme .text-muted { color: #8a99ad !important; }
+
+    /* Inputs readability fixes */
+    .cabinet-dialog.day-theme .mud-input {
+        color: #1a252f !important;
+    }
+    .cabinet-dialog.night-theme .mud-input {
+        color: #ffffff !important;
+    }
+    .cabinet-dialog.day-theme .mud-input-label {
+        color: #5a697d !important;
+    }
+    .cabinet-dialog.night-theme .mud-input-label {
+        color: #8a99ad !important;
+    }
+
+    .avatar-wrapper {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.1);
+    }
+    .user-custom-avatar {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .avatar-letter {
+        font-size: 2.2rem;
+        font-weight: bold;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .stat-card {
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: transform 0.2s, background-color 0.2s;
+    }
+    .cabinet-dialog.day-theme .stat-card {
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .cabinet-dialog.day-theme .stat-card:hover {
+        background: rgba(0, 0, 0, 0.06);
+        transform: translateY(-2px);
+    }
+    .cabinet-dialog.night-theme .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .cabinet-dialog.night-theme .stat-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+    }
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: var(--mud-palette-primary);
+    }
+    .stat-label {
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .cabinet-dialog.day-theme .stat-label { color: #5a697d !important; }
+    .cabinet-dialog.night-theme .stat-label { color: #8a99ad !important; }
+
+    .fact-bubble {
+        border-radius: 4px 12px 12px 4px;
+        transition: background-color 0.3s;
+    }
+    .cabinet-dialog.day-theme .fact-bubble {
+        background: rgba(79, 172, 254, 0.08);
+        border-left: 4px solid #4facfe;
+    }
+    .cabinet-dialog.night-theme .fact-bubble {
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+    }
+    .fact-text {
+        font-style: italic;
+        line-height: 1.4;
+    }
+    .cabinet-dialog.day-theme .fact-text { color: #2c3e50 !important; }
+    .cabinet-dialog.night-theme .fact-text { color: #e0e6ed !important; }
+
+    .color-preset-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.2);
+        cursor: pointer;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .color-preset-btn:hover {
+        transform: scale(1.15);
+    }
+    .color-preset-btn.active {
+        border-color: var(--mud-palette-primary);
+        box-shadow: 0 0 8px var(--mud-palette-primary);
+    }
+</style>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Username { get; set; } = "Пользователь";
+    [Parameter] public bool IsNightMode { get; set; }
+    [Parameter] public string Email { get; set; } = "";
+    [Parameter] public int TotalScore { get; set; }
+    [Parameter] public string? AvatarData { get; set; }
+    [Parameter] public List<FishCatchResult> CatchHistory { get; set; } = new();
+    [Parameter] public List<DiaryEntry> DiaryEntries { get; set; } = new();
+
+    // Local Stats
+    private int _streakDays = 0;
+    private int _totalSessions = 0;
+    private int _totalMinutesSpent = 0;
+    private string _favoriteFish = "Нет улова";
+    private string _comparisonFact = "";
+
+    // Feedback
+    private readonly string[] _feedbackTypes = { "Пожелание", "Совет", "Ошибка", "Другое" };
+    private string _feedbackType = "Пожелание";
+    private string _feedbackText = "";
+    private bool _isSubmittingFeedback = false;
+
+    // Presets
+    private class PresetColor { public string Name { get; set; } = ""; public string Value { get; set; } = ""; }
+    private readonly List<PresetColor> _presetGradients = new()
+    {
+        new() { Name = "Закат", Value = "linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)" },
+        new() { Name = "Океан", Value = "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" },
+        new() { Name = "Дзен", Value = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)" },
+        new() { Name = "Лаванда", Value = "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" },
+        new() { Name = "Глубина", Value = "linear-gradient(135deg, #2c3e50 0%, #000000 100%)" }
+    };
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            CalculateStatistics();
+            GenerateComparisonFact();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CABINET ERROR]: {ex}");
+            Snackbar.Add($"Ошибка инициализации кабинета: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void CalculateStatistics()
+    {
+        _totalSessions = DiaryEntries?.Where(d => d != null).Count() ?? 0;
+        _totalMinutesSpent = DiaryEntries?.Where(d => d != null).Sum(d => d.MinutesSpent) ?? 0;
+
+        _streakDays = CalculateStreak(DiaryEntries ?? new());
+
+        if (CatchHistory != null)
+        {
+            var fav = CatchHistory
+                .Where(c => c != null && c.Fish != null && !string.IsNullOrEmpty(c.Fish.Name))
+                .GroupBy(c => c.Fish.Name)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+
+            if (fav != null)
+            {
+                _favoriteFish = $"{fav.Key} ({fav.Count()} шт.)";
+            }
+        }
+    }
+
+    private int CalculateStreak(List<DiaryEntry> entries)
+    {
+        if (entries == null) return 0;
+        
+        var validEntries = entries.Where(e => e != null).ToList();
+        if (!validEntries.Any()) return 0;
+        
+        var dates = validEntries
+            .Select(e => e.CompletionTime.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+            
+        if (!dates.Any()) return 0;
+        
+        var today = DateTime.UtcNow.Date;
+        var yesterday = today.AddDays(-1);
+        
+        if (dates[0] != today && dates[0] != yesterday)
+        {
+            return 0;
+        }
+        
+        int streak = 0;
+        var currentCheckDate = dates[0];
+        
+        for (int i = 0; i < dates.Count; i++)
+        {
+            if (dates[i] == currentCheckDate)
+            {
+                streak++;
+                currentCheckDate = currentCheckDate.AddDays(-1);
+            }
+            else if (dates[i] < currentCheckDate)
+            {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    private void GenerateComparisonFact()
+    {
+        int t = _totalMinutesSpent;
+        var facts = new List<string>
+        {
+            $"За {t} мин. фокусирования можно было бы выучить примерно {t / 2} иностранных слов, но вы выбрали внутреннее спокойствие и отдых у озера. Это бесценно!",
+            $"За {t} мин. космический корабль на орбите пролетел бы около {t * 450} км, а вы смогли отвлечься от суеты и насладиться тишиной.",
+            $"За {t} мин. можно прочесть {t / 2} страниц хорошей книги. Но медитативная рыбалка — это ваша собственная книга спокойствия.",
+            $"За {t} мин. можно пробежать {(t * 0.15):F1} км. Здорово, что вы уделили это время заботе о своем ментальном состоянии на нашей виртуальной рыбалке!"
+        };
+
+        if (t == 0)
+        {
+            _comparisonFact = "Забросьте удочку в первый раз! Даже 5 минут тишины помогут вам перезагрузиться и настроиться на продуктивный лад.";
+        }
+        else
+        {
+            int idx = Random.Shared.Next(0, facts.Count);
+            _comparisonFact = facts[idx];
+        }
+    }
+
+    private string GetInitial()
+    {
+        if (string.IsNullOrWhiteSpace(Username)) return "U";
+        return Username.Trim()[..1].ToUpper();
+    }
+
+    private string GetAvatarBackgroundStyle()
+    {
+        if (string.IsNullOrEmpty(AvatarData))
+        {
+            return "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+        }
+        if (IsBase64Avatar(AvatarData))
+        {
+            return "transparent";
+        }
+        return AvatarData; // CSS gradient preset
+    }
+
+    private bool IsBase64Avatar(string? data)
+    {
+        return data != null && data.StartsWith("data:image/");
+    }
+
+    private async Task SelectGradient(string gradientCss)
+    {
+        AvatarData = gradientCss;
+        await SaveAvatarToServer(gradientCss);
+    }
+
+    private async Task OnAvatarUploaded(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        try
+        {
+            // Масштабируем изображение на стороне клиента до 180x180 пикселей в формате JPEG.
+            // Это сжимает размер до ~8-12 КБ, что предотвращает ошибки Neon DB и гарантирует мгновенную отправку.
+            var resizedFile = await file.RequestImageFileAsync("image/jpeg", 180, 180);
+            
+            using var memoryStream = new System.IO.MemoryStream();
+            await resizedFile.OpenReadStream().CopyToAsync(memoryStream);
+            var buffer = memoryStream.ToArray();
+
+            var base64 = Convert.ToBase64String(buffer);
+            var dataUrl = $"data:image/jpeg;base64,{base64}";
+            
+            AvatarData = dataUrl;
+            await SaveAvatarToServer(dataUrl);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ошибка при загрузке аватарки: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveAvatarToServer(string avatarValue)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/profile/avatar", new { AvatarData = avatarValue });
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Аватарка успешно обновлена!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Не удалось обновить аватарку на сервере", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("Ошибка соединения при обновлении аватарки", Severity.Error);
+        }
+    }
+
+    private async Task SubmitFeedback()
+    {
+        if (string.IsNullOrWhiteSpace(_feedbackText))
+        {
+            Snackbar.Add("Пожалуйста, введите текст отзыва", Severity.Warning);
+            return;
+        }
+
+        _isSubmittingFeedback = true;
+        try
+        {
+            var feedback = new Feedback
+            {
+                FeedbackType = _feedbackType,
+                Text = _feedbackText
+            };
+
+            var response = await Http.PostAsJsonAsync("api/profile/feedback", feedback);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Спасибо за отзыв! Мы обязательно его рассмотрим.", Severity.Success);
+                _feedbackText = "";
+            }
+            else
+            {
+                Snackbar.Add("Ошибка отправки отзыва", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("Ошибка соединения при отправке отзыва", Severity.Error);
+        }
+        finally
+        {
+            _isSubmittingFeedback = false;
+        }
+    }
+}
