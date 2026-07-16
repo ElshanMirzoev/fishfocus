@@ -101,7 +101,7 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim("TotalPoints", user.TotalPoints.ToString())
+
         };
 
         var token = new JwtSecurityToken(
